@@ -14,9 +14,7 @@ Copyright 2023 Christopher-Marios Mamaloukas
    limitations under the License.
 -}
 
-module Equations(rangeFixer, maybeSolver) where
-
-import Derivatives as D
+module Equations(posInf, negInf, rangeFixer, maybeSolver, maybeSolver') where
 
 h = 0.0001
 

@@ -16,6 +16,7 @@ Copyright 2023 Christopher-Marios Mamaloukas
 
 module Runge where
 
+import Derivatives as D
 -- Runge-Kutta implementation
 k :: Int -> Double -> Double -> Double -> (Double -> Double -> Double) -> Double
 k 1 h t y f = f t y
@@ -33,5 +34,23 @@ next h tNow yNow f = (tNow + h, yNow + (h/6)*((k1 h tNow yNow f) + 2*(k2 h tNow 
 
 solveFODiff :: Double -> (Double, Double) -> Double -> (Double -> Double -> Double) -> [(Double, Double)]
 solveFODiff h (tInit, tFin) yInit f | tInit >= tFin = []
-                                | tInit < tFin = let (tNext, yNext) = next h tInit yInit f in 
+                                    | tInit < tFin = let (tNext, yNext) = next h tInit yInit f in 
                                                         (tNext, yNext):(solveFODiff h (tNext, tFin) yNext f) 
+
+derivative :: (Double -> Double -> Double)
+derivative t y = tinyDelta 
+
+-- Runge-Kutta implementation for second order differential equations
+{-
+ - The following function solves a second order differential equation.
+ - It requires to be supplied with the following arguments:
+ - 1) The step size
+ - 2) The range of the independent variable
+ - 3) The initial conditions (yInit, yInit')
+ - 4) The function that describes the differential equation (y'' = f(t, y, y'))
+ - The solver uses the auxiliary relation y' = g(t, y) to decouple the second order differential equation into two first order differential equations.
+ - In each step, it first solves y' = g(t, y) and then y'' = f(t, y, y').
+ -}
+solveSODiff :: Double -> (Double, Double) -> Double -> Double -> (Double -> Double -> Double -> Double) -> [(Double, Double)]
+solveSODiff h (tInit, tFin) yInit yInit' f | tInit >= tFin = []
+                                           | tInit < tFin = let (tNext, yNext') = next h tInit y

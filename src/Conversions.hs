@@ -14,27 +14,37 @@ Copyright 2023 Christopher-Marios Mamaloukas
    limitations under the License.
 -}
 
-module Conversions(toTortoise, toRadial) where
+module Conversions(toNormalTortoise, toNormalRadial, normalize, denormalize) where
 
 import Equations as E
 
 -- logarithm
 ln = log
 
--- converter
-toTortoise :: Double ->  Double -> Maybe Double
-toTortoise rS r | r >= rS = Just $ r - rS*(1 - ln (r - rS))
-                | r < rS = Nothing
+-- converter from Radial to Tortoise - normalized in terms of the Schwarzschild radius
+toNormalTortoise :: Double -> Maybe Double
+toNormalTortoise r | r >= 1 = Just $ r + ln (r - 1)
+                   | r < 1 = Nothing
 
-radialEqu :: Double -> Double -> (Double -> Maybe Double)
-radialEqu rS r' = (\r -> case (toTortoise rS r) of 
+-- these are used for the converter from Tortoise to Radial
+normalRadialEqu :: Double -> (Double -> Maybe Double)
+normalRadialEqu r' = (\r -> case (toNormalTortoise r) of 
                                 Nothing -> Nothing
                                 Just res' -> Just $ r' - res')
 
-fixRangeForProblem range rS r' = E.rangeFixer 10 (rS + (10**(-10))) posInf (radialEqu rS r') range
+fixRangeForProblem range r' = E.rangeFixer 10 (10**(-10)) E.posInf (normalRadialEqu r') range
 
-toRadial :: Double -> Double -> Maybe Double
-toRadial rS r' = range >>= \range -> E.maybeSolver' (radialEqu rS r') range
-                where range = if rS < r' 
-                                then fixRangeForProblem (rS, rS + 10) rS r'
-                                else fixRangeForProblem (rS, r') rS r'
+-- converter from Tortoise to Radial - normalized in terms of the Schwarzschild radius
+toNormalRadial :: Double -> Maybe Double
+toNormalRadial r' = range >>= \range -> E.maybeSolver' (normalRadialEqu r') range
+                where range = if r' < 1 
+                                then fixRangeForProblem (1, 1 + 10) r'
+                                else fixRangeForProblem (1, r') r'
+
+-- normalizes a radius (either tortoise or radial) in terms of the Schwarzschild radius
+normalize :: Double -> Double -> Double
+normalize rS r = r/rS
+
+-- denormalize a radius (either tortoise or radial) in terms of the Schwarzschild radius
+denormalize :: Double -> Double -> Double
+denormalize rS r = rS * r
