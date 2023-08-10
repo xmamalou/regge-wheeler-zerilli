@@ -40,7 +40,6 @@ solveFODiff h (tInit, tFin) yInit f | tInit >= tFin = []
                                                         (tNext, yNext):(solveFODiff h (tNext, tFin) yNext f) 
 
 -- Runge-Kutta implementation for a wave equation
-newtype 
 newtype Equ = Equ (Double -> Double -> Double -> Double -> Double)
 newtype BigEqu = BigEqu (F.Func -> F.Func -> F.Func -> Func)
 
