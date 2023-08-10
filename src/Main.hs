@@ -37,7 +37,7 @@ main = do
     let swartz = 10
     let tortoiseRad = 0
 
-    print $ radRad
+    print $ RK.solveFODiff 0.001 (0, 5) (wavepacket tortoiseRad) (dy' swartz 1 tortoiseRad)
     {-toFile fileOptions "initial_wavepacket.svg" $ do
     layout_title .= "Runge-Kutta tests"
     setColors [opaque blue]
