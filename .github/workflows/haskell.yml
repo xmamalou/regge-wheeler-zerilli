@@ -16,11 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-haskell@v1
-      with:
-        ghc-version: '9.2.1'
-        cabal-version: '3.6.2.0'
-
+  
+    - name: SetUp
+      run: |
+        url --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+        
     - name: Cache
       uses: actions/cache@v3
       env:
