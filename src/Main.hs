@@ -36,8 +36,6 @@ wavepacket r = exp (-r^^2) -- in tortoise coordinates!
 main = do
     let swartz = 10
     let tortoiseRad = 0
-    
-    let radRad = C.toNormalRadial tortoiseRad >>= \r -> Just $ C.denormalize swartz r
 
     print $ radRad
     {-toFile fileOptions "initial_wavepacket.svg" $ do

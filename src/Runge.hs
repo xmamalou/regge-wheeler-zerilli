@@ -17,6 +17,8 @@ Copyright 2023 Christopher-Marios Mamaloukas
 module Runge where
 
 import Derivatives as D
+import Functions as F
+
 -- Runge-Kutta implementation
 k :: Int -> Double -> Double -> Double -> (Double -> Double -> Double) -> Double
 k 1 h t y f = f t y
@@ -37,20 +39,41 @@ solveFODiff h (tInit, tFin) yInit f | tInit >= tFin = []
                                     | tInit < tFin = let (tNext, yNext) = next h tInit yInit f in 
                                                         (tNext, yNext):(solveFODiff h (tNext, tFin) yNext f) 
 
-derivative :: (Double -> Double -> Double)
-derivative t y = tinyDelta 
+-- Runge-Kutta implementation for a wave equation
+newtype 
+newtype Equ = Equ (Double -> Double -> Double -> Double -> Double)
+newtype BigEqu = BigEqu (F.Func -> F.Func -> F.Func -> Func)
 
--- Runge-Kutta implementation for second order differential equations
 {-
- - The following function solves a second order differential equation.
- - It requires to be supplied with the following arguments:
- - 1) The step size
- - 2) The range of the independent variable
- - 3) The initial conditions (yInit, yInit')
- - 4) The function that describes the differential equation (y'' = f(t, y, y'))
- - The solver uses the auxiliary relation y' = g(t, y) to decouple the second order differential equation into two first order differential equations.
- - In each step, it first solves y' = g(t, y) and then y'' = f(t, y, y').
+ - This function gives the next value of a wavefunction on a point.
  -}
-solveSODiff :: Double -> (Double, Double) -> Double -> Double -> (Double -> Double -> Double -> Double) -> [(Double, Double)]
-solveSODiff h (tInit, tFin) yInit yInit' f | tInit >= tFin = []
-                                           | tInit < tFin = let (tNext, yNext') = next h tInit y
+nextOnPoint :: Double -> Double -> (Double, Double, Double) -> (Equ, Equ, Equ) -> (Double, (Double, Double, Double))
+nextOnPoint step tNow (yNow, yTimeNow, yRadNow) (f, fTime, fRad) = (tNext, (yNext, yTimeNext, yRadNext))
+                                                                    where yNext = snd $ next step tInit yInit (\t y -> f t y yTimeNow yRadNow)
+                                                                          yTimeNext = snd $ next step tInit yInit (\t y -> fTime t yNow y yRadNow) 
+                                                                          yRadNext = snd $ next step tInit yRadInit (\t y -> fRad t yNow yTimeNow y)
+                                                                          tNext = tInit
+
+{-
+ - This function gives the functions f(t + h, y), fTime(t + h, y) and fRad(t + h, y) for all y in a given range.
+ - It must be true that the length of the yNow, yTimeNow and yRadNow lists is not only the same,
+ - but also equat to (abs (rFin - rInit))/stepR.
+ -}
+nextOnLine :: Double -> Double -> Double -> (Double, Double) -> (F.Func, F.Func, F.Func) -> (BigEqu, BigEqu, BigEqu) -> [(Double, (Double, Double, Double))]
+nextOnLine stepT tNow stepR (rInit, rFin) (yNow, yTimeNow, yRadNow) (f, fTime, fRad) | rInit >= rFin = []
+                                                                                     | otherwise = let (tNext, (yNext, yTimeNext, yRadNext)) = nextOnPoint stepT tNow (yImg !! 0, yTimeImg !! 0, yRadImg !! 0) (g, gTime, gRad) in 
+                                                                                                        (tNext, (yNext, yTimeNext, yRadNext)):nextOnLine stepT tNow stepR (rInit + stepR, rFin) (tail yNow, tail yTimeNow, tail yRadNow) (f, fTime, fRad)
+                                                                                                    where g = f yNow yTimeNow yRadNow
+                                                                                                          gTime = fTime yNow yTimeNow yRadNow
+                                                                                                          gRad = fRad yNow yTimeNow yRadNow
+                                                                                                          yImg = F.image yNow
+                                                                                                          yTimeImg = F.image yTimeNow
+                                                                                                          yRadImg = F.image yRadNow
+
+{-
+ - divider cleanly divides the output of nextOnLine into three Funcs.
+ -}                                                                                         
+divider :: [(Double, (Double, Double, Double))] -> (F.Func, F.Func, F.Func)
+divider [] = (F.Func [], F.Func [], F.Func [])
+divider ((t, (y, yTime, yRad)):f) = (F.Func ((t, y):(F.domain yNow)), F.Func ((t, yTime):(F.domain yTimeNow)), F.Func ((t, yRad):(F.domain yRadNow)))
+                                    where (yNow, yTimeNow, yRadNow) = divider f
