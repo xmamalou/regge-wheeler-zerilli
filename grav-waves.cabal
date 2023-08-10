@@ -45,7 +45,7 @@ maintainer:         xmamalou@freemail.gr
 category:           Math
 
 -- Extra files to be distributed with the package, such as examples or a README.
-extra-source-files: CHANGELOG.md
+-- extra-source-files: 
 
 executable grav-waves
     -- .hs or .lhs file containing the Main module.
