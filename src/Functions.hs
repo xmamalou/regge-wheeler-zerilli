@@ -16,7 +16,7 @@ Copyright 2023 Christopher-Marios Mamaloukas
 
 module Functions where
 
-newtype Func = Func [(Double, Double)] deriving (Show)
+type Func = [(Double, Double)]
 {- packer takes a function f of type Double -> Double and a range in the form of a tuple,
  - and a step and spits out an array of tuples where the first member is the x and the second the f(x) 
  -} 
@@ -28,10 +28,10 @@ packer f (xInit, xFin) step | xInit >= xFin = []
  - Get the image of a function
  -}
 image :: Func -> [Double]
-image (Func f) = map snd f
+image f = map snd f
 
 {-
  - Get the domain of a function
  -}
 domain :: Func -> [Double]
-domain (Func f) = map fst f
+domain f = map fst f

@@ -31,14 +31,16 @@ dy' l v r y = (v^^2 + q l r) * y
 wavepacket r = exp (-r^^2) -- in tortoise coordinates!
 
 -- file stuff
---fileOptions = FileOptions (800, 600) SVG
+fileOptions = FileOptions (800, 600) SVG
+
+yInit = 10
+f t y = (sin (t*y))*y
 
 main = do
     let swartz = 10
     let tortoiseRad = 0
 
-    print $ RK.solveFODiff 0.001 (0, 5) (wavepacket tortoiseRad) (dy' swartz 1 tortoiseRad)
-    {-toFile fileOptions "initial_wavepacket.svg" $ do
-    layout_title .= "Runge-Kutta tests"
-    setColors [opaque blue]
-    plot (line "Runge-Kutta" [RK.solveFODiff 0.001 (0, 5) yInit f])-}
+    (toFile fileOptions "tests.svg" $ do
+        layout_title .= "Runge-Kutta tests"
+        setColors [opaque blue]
+        plot (line "Runge-Kutta" [RK.solveFODiff 0.001 (0, 5) yInit f]))

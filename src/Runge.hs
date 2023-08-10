@@ -40,18 +40,18 @@ solveFODiff h (tInit, tFin) yInit f | tInit >= tFin = []
                                                         (tNext, yNext):(solveFODiff h (tNext, tFin) yNext f) 
 
 -- Runge-Kutta implementation for a wave equation
-newtype Equ = Equ (Double -> Double -> Double -> Double -> Double)
-newtype BigEqu = BigEqu (F.Func -> F.Func -> F.Func -> Func)
+type Equ = (Double -> Double -> Double -> Double -> Double)
+type BigEqu = (F.Func -> F.Func -> F.Func -> Equ)
 
 {-
  - This function gives the next value of a wavefunction on a point.
  -}
 nextOnPoint :: Double -> Double -> (Double, Double, Double) -> (Equ, Equ, Equ) -> (Double, (Double, Double, Double))
 nextOnPoint step tNow (yNow, yTimeNow, yRadNow) (f, fTime, fRad) = (tNext, (yNext, yTimeNext, yRadNext))
-                                                                    where yNext = snd $ next step tInit yInit (\t y -> f t y yTimeNow yRadNow)
-                                                                          yTimeNext = snd $ next step tInit yInit (\t y -> fTime t yNow y yRadNow) 
-                                                                          yRadNext = snd $ next step tInit yRadInit (\t y -> fRad t yNow yTimeNow y)
-                                                                          tNext = tInit
+                                                                    where yNext = snd $ next step tNow yNow (\t y -> f t y yTimeNow yRadNow)
+                                                                          yTimeNext = snd $ next step tNow yNow (\t y -> fTime t yNow y yRadNow) 
+                                                                          yRadNext = snd $ next step tNow yRadNow (\t y -> fRad t yNow yTimeNow y)
+                                                                          tNext = tNow
 
 {-
  - This function gives the functions f(t + h, y), fTime(t + h, y) and fRad(t + h, y) for all y in a given range.
@@ -69,10 +69,14 @@ nextOnLine stepT tNow stepR (rInit, rFin) (yNow, yTimeNow, yRadNow) (f, fTime, f
                                                                                                           yTimeImg = F.image yTimeNow
                                                                                                           yRadImg = F.image yRadNow
 
+data Which = First | Second | Third
+separator :: Which -> [(Double, (Double, Double, Double))] -> F.Func
+separator _ [] = []
+separator First ((t, (y, yTime, yRad)):f) = (t, y):(separator First f)
+separator Second ((t, (y, yTime, yRad)):f) = (t, yTime):(separator Second f)
+separator Third ((t, (y, yTime, yRad)):f) = (t, yRad):(separator Third f)
 {-
  - divider cleanly divides the output of nextOnLine into three Funcs.
  -}                                                                                         
 divider :: [(Double, (Double, Double, Double))] -> (F.Func, F.Func, F.Func)
-divider [] = (F.Func [], F.Func [], F.Func [])
-divider ((t, (y, yTime, yRad)):f) = (F.Func ((t, y):(F.domain yNow)), F.Func ((t, yTime):(F.domain yTimeNow)), F.Func ((t, yRad):(F.domain yRadNow)))
-                                    where (yNow, yTimeNow, yRadNow) = divider f
+divider list = (separator First list, separator Second list, separator Third list)
