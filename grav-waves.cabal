@@ -58,7 +58,7 @@ executable grav-waves
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.16.4.0, Chart ^>= 1.9.4, Chart-cairo ^>= 1.9.3
+    build-depends:    base ^>=4.16.0.0, Chart ^>= 1.9.4, Chart-cairo ^>= 1.9.3
 
     -- Directories containing source files.
     hs-source-dirs:   src
